@@ -134,11 +134,14 @@ npm run build
 
 ## Screenshots
 
-No screenshot files are committed yet. Before the GitHub submission, capture these three demo states and save them with stable filenames:
+### Dashboard — Baseline vs RecoverAI
+![RecoverAI dashboard](docs/images/dashboard.png)
 
-- `/docs/images/dashboard.png`: dashboard with strategy comparison after seed-2026 baseline and RecoverAI runs
-- `docs/images/golden-success.png`: `golden-success-2026` showing approved simulated recovery
-- `docs/images/golden-guardrail.png`: `golden-guardrail-2026` showing policy override and no unsafe execution
+### Golden Case A — Successful Recovery
+![Golden success case](docs/images/golden-success.png)
+
+### Golden Case B — Guardrail Override
+![Golden guardrail case](docs/images/golden-guardrail.png)
 
 ## Limitations and production evolution
 
