@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  FAILED
+  RECOVERY_PLANNED
+  RECOVERING
+  RECOVERED
+  ESCALATED
+  STOPPED
+  ABANDONED
+}
+
+enum FailureCategory {
+  TRANSIENT_TECHNICAL
+  CUSTOMER_ACTION_REQUIRED
+  PAYMENT_METHOD_ISSUE
+  AUTHENTICATION
+  INSUFFICIENT_FUNDS
+  PERMANENT_FAILURE
+  RISK_OR_FRAUD
+  UNKNOWN
+}
+
+enum RecoveryAction {
+  RETRY_LATER
+  SEND_REMINDER
+  SWITCH_PAYMENT_METHOD
+  HUMAN_REVIEW
+  STOP
+}
+
+enum ExecutionMode {
+  SIMULATION
+  RAZORPAY_TEST
+}
+
+model Batch {
+  id             String          @id
+  seed           Int
+  label          String
+  createdAt      DateTime        @default(now())
+  cases          PaymentCase[]
+  experimentRuns ExperimentRun[]
+}
+
+model PaymentCase {
+  id                  String            @id @default(cuid())
+  batchId             String
+  externalPaymentId   String            @unique
+  customerId          String
+  customerName        String
+  customerEmail       String
+  amount              Decimal           @db.Decimal(14, 2)
+  currency            String            @default("INR")
+  paymentMethod       String
+  status              PaymentStatus     @default(FAILED)
+  failureCode         String
+  failureReason       String
+  failureCategory     FailureCategory?
+  retryCount          Int               @default(0)
+  maxRetries          Int               @default(3)
+  contactCount        Int               @default(0)
+  maxContacts         Int               @default(2)
+  recoverabilityScore Float?
+  riskScore           Float             @default(0)
+  recoveredAmount     Decimal           @default(0) @db.Decimal(14, 2)
+  nextActionAt        DateTime?
+  lastContactAt       DateTime?
+  manuallyStopped     Boolean           @default(false)
+  demoTags            Json
+  diagnosis           Json?
+  aiDecision          Json?
+  policyDecision      Json?
+  simulationProfile   Json
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  batch               Batch             @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  attempts            RecoveryAttempt[]
+  auditEvents         AuditEvent[]
+
+  @@index([batchId, status])
+  @@index([failureCategory])
+}
+
+model RecoveryAttempt {
+  id             String         @id @default(cuid())
+  caseId         String
+  action         RecoveryAction
+  mode           ExecutionMode
+  idempotencyKey String         @unique
+  success        Boolean?
+  outcome        String
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+  paymentCase    PaymentCase    @relation(fields: [caseId], references: [id], onDelete: Cascade)
+}
+
+model AuditEvent {
+  id          String      @id @default(cuid())
+  caseId      String
+  eventType   String
+  actor       String
+  reason      String
+  metadata    Json?
+  mode        String
+  timestamp   DateTime    @default(now())
+  paymentCase PaymentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+
+  @@index([caseId, timestamp])
+}
+
+model WebhookEvent {
+  id          String   @id
+  eventType   String
+  payloadHash String
+  processedAt DateTime @default(now())
+}
+
+model ExecutionClaim {
+  idempotencyKey String   @id
+  caseId         String
+  createdAt      DateTime @default(now())
+
+  @@index([caseId])
+}
+
+model ExperimentRun {
+  id        String   @id @default(cuid())
+  batchId   String
+  strategy  String
+  metrics   Json
+  createdAt DateTime @default(now())
+  batch     Batch    @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, strategy])
+}
