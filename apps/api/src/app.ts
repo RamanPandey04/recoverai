@@ -26,6 +26,7 @@ const idSchema = z.string().min(1).max(120);
 export function createApp(repo: Repository = new MemoryRepository()) {
   const app = express(); const recovery = new RecoveryService(repo); const deterministicRecovery = new RecoveryService(repo, new AiDecisionService(false));
   const activeBatchRuns = new Set<string>();
+  app.set("trust proxy", 1);
   app.set("repo", repo);
   app.use(helmet()); app.use(cors({ origin: config.WEB_ORIGIN })); app.use(pinoHttp({ level: config.LOG_LEVEL }));
   app.post("/api/webhooks/razorpay", rateLimit({ windowMs: 60_000, limit: config.NODE_ENV === "test" ? 10_000 : 1_200, standardHeaders: true, legacyHeaders: false }), express.raw({ type: "application/json", limit: "256kb" }), async (req, res, next) => {
