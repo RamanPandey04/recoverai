@@ -8,7 +8,7 @@ const nav = [
 ] as const;
 
 export function Shell({ children }: { children: React.ReactNode }) {
-  const path = usePathname();
+  const path = usePathname() ?? "/";
   return <div className="app-grid grid min-h-screen grid-cols-[232px_1fr]">
     <aside className="sidebar sticky top-0 flex h-screen flex-col border-r border-slate-800 bg-navy px-4 py-5 text-white">
       <div className="mb-8 flex items-center gap-3 px-2"><span className="grid h-9 w-9 place-items-center rounded-lg bg-blue"><Bot size={19}/></span><div><div className="text-[15px] font-bold">RecoverAI</div><div className="text-[10px] text-slate-400">AI Revenue Recovery Agent</div></div></div>

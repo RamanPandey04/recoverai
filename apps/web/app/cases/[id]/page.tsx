@@ -9,10 +9,10 @@ import { AlertTriangle, Bot, ShieldCheck, Sparkles } from "../../../components/i
 import { api, inr, label, pct } from "../../../lib/api";
 
 export default function CaseDetail() {
-  const { id } = useParams<{ id: string }>(); const [item, setItem] = useState<PaymentCase>(); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
-  const refresh = useCallback(async () => { try { setItem(await api<PaymentCase>(`/cases/${id}`)); setError(""); } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load case"); } }, [id]);
+  const id = useParams<{ id: string }>()?.id; const [item, setItem] = useState<PaymentCase>(); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
+  const refresh = useCallback(async () => { if (!id) return; try { setItem(await api<PaymentCase>(`/cases/${id}`)); setError(""); } catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load case"); } }, [id]);
   useEffect(() => { void refresh(); }, [refresh]);
-  const invoke = async (operation: "plan" | "execute") => { setBusy(true); setError(""); try { if (operation === "plan") setItem(await api<PaymentCase>(`/cases/${id}/plan`, { method: "POST", body: "{}" })); else { const result = await api<{ payment: PaymentCase }>(`/cases/${id}/execute`, { method: "POST", body: "{}" }); setItem(result.payment); } } catch (cause) { setError(cause instanceof Error ? cause.message : "Operation failed"); } finally { setBusy(false); } };
+  const invoke = async (operation: "plan" | "execute") => { if (!id) return; setBusy(true); setError(""); try { if (operation === "plan") setItem(await api<PaymentCase>(`/cases/${id}/plan`, { method: "POST", body: "{}" })); else { const result = await api<{ payment: PaymentCase }>(`/cases/${id}/execute`, { method: "POST", body: "{}" }); setItem(result.payment); } } catch (cause) { setError(cause instanceof Error ? cause.message : "Operation failed"); } finally { setBusy(false); } };
   if (!item) return <Shell>{error ? <div role="alert" className="panel p-8 text-center text-sm text-red-700">{error}<button onClick={() => void refresh()} className="ml-3 font-semibold">Retry</button></div> : <div className="panel h-96 animate-pulse bg-slate-100"/>}</Shell>;
   const isOverride = Boolean(item.policyDecision && (!item.policyDecision.approved || item.aiDecision?.recommendedAction !== item.policyDecision.finalAction));
   const goldenLabel = item.demoTags.includes("GOLDEN_SUCCESS") ? "Golden A · Intelligent recovery" : item.demoTags.includes("GOLDEN_GUARDRAIL") ? "Golden B · Guardrail override" : null;
