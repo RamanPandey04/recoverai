@@ -4,4 +4,4 @@ export const config = {
   }
 };
 
-export { default } from "../../../../apps/api/dist/apps/api/src/vercel.js";
+export { default } from "../../../../apps/api/src/vercel";
