@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "prebuild": "prisma generate --schema ../../prisma/schema.prisma",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/apps/api/src/server.js",
+    "pretypecheck": "prisma generate --schema ../../prisma/schema.prisma",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prelint": "prisma generate --schema ../../prisma/schema.prisma",
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

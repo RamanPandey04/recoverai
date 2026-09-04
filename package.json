@@ -4,12 +4,22 @@
   "private": true,
   "workspaces": ["apps/*", "packages/*"],
   "overrides": {"postcss": "^8.5.23"},
+  "allowScripts": {
+    "@prisma/client": true,
+    "@prisma/engines": true,
+    "prisma": true
+  },
   "scripts": {
     "dev": "concurrently -n api,web -c cyan,magenta \"npm:dev -w @recoverai/api\" \"npm:dev -w @recoverai/web\"",
+    "postinstall": "npm run db:generate",
+    "prebuild": "npm run db:generate",
     "build": "npm run build -w @recoverai/domain && npm run build -w @recoverai/api && npm run build -w @recoverai/web",
+    "pretypecheck": "npm run db:generate",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "pretest": "npm run db:generate",
     "test": "vitest run",
     "test:watch": "vitest",
+    "prelint": "npm run db:generate",
     "lint": "npm run lint --workspaces --if-present",
     "db:generate": "prisma generate --schema prisma/schema.prisma",
     "db:migrate": "prisma migrate dev --schema prisma/schema.prisma",

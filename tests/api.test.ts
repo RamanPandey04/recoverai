@@ -3,6 +3,7 @@ import request from "supertest";
 import { describe, expect, it } from "vitest";
 import { createApp } from "../apps/api/src/app.js";
 import { MemoryRepository } from "../apps/api/src/repository.js";
+import vercelHandler from "../apps/api/src/vercel.js";
 
 const payload={event:"payment.failed",payload:{payment:{entity:{id:"pay_webhook_1",amount:499900,currency:"INR",method:"upi",error_code:"BANK_TEMPORARILY_UNAVAILABLE",error_description:"Issuer unavailable",created_at:1710000000}}}};
 describe("Razorpay webhook",()=>{
@@ -16,4 +17,11 @@ describe("Razorpay webhook",()=>{
 describe("batch API",()=>{
   it("resets experiment results and reproduces seed 2026",async()=>{const app=createApp();await request(app).post("/api/batches/generate").send({count:100,seed:2026}).expect(201);const first=await request(app).post("/api/batches/batch-2026/run-recoverai").send({}).expect(200);await request(app).post("/api/batches/generate").send({count:100,seed:2026}).expect(201);const cleared=await request(app).get("/api/batches/batch-2026/comparison").expect(200);expect(cleared.body.data.recoverai).toBeUndefined();const second=await request(app).post("/api/batches/batch-2026/run-recoverai").send({}).expect(200);expect(second.body.data).toEqual(first.body.data)});
   it("rejects invalid case filters",async()=>{await request(createApp()).get("/api/cases?status=CHARGED").expect(400)});
+});
+
+describe("Vercel serverless handler",()=>{
+  it("boots memory mode with the deterministic demo batch",async()=>{
+    const response=await request(vercelHandler).get("/api/cases?batchId=batch-2026").expect(200);
+    expect(response.body.data).toHaveLength(100);
+  });
 });
